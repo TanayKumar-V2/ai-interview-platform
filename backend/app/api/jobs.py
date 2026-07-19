@@ -4,14 +4,18 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.user import User
 from app.models.resume import Resume
-from app.schemas.job_postings import JobMatchResult
+from app.models.job_posting import JobPosting
+from app.schemas.job_postings import JobMatchResult, JobPostingResponse
 from app.core.security import get_current_user
 from app.agents.job_matcher_agent import job_matcher_graph
-from app.schemas.job_postings import JobMatchResponse
-from app.models.job_posting import JobPosting
-from app.schemas.job_postings import JobPostingResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+@router.get("/", response_model=list[JobPostingResponse])
+def list_jobs(db: Session = Depends(get_db)):
+    jobs = db.query(JobPosting).order_by(JobPosting.posted_at.desc()).all()
+    return jobs
 
 
 @router.get("/match/{resume_id}", response_model=list[JobMatchResult])
