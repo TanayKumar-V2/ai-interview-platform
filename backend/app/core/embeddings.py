@@ -27,7 +27,33 @@ In 3-4 sentences, explain why this candidate is or isn't a good fit, and mention
 
     response = co.chat(
         message=prompt,
-        model="command-r",
+        model="command-a-03-2025",
         temperature=0.3,
     )
     return response.text
+
+def generate_interview_question(job_title: str, job_description: str, previous_turns: list[dict], turn_number: int) -> str:
+    history_text = ""
+    for turn in previous_turns:
+        history_text += f"Q{turn['turn_number']}: {turn['question']}\nA{turn['turn_number']}: {turn['answer']}\n\n"
+
+    if turn_number == 1:
+        prompt = f"""You are conducting a mock job interview for the role of {job_title}.
+Job description: {job_description}
+
+Ask an opening interview question — something that lets the candidate introduce their relevant background. Ask only the question, nothing else."""
+    else:
+        prompt = f"""You are conducting a mock job interview for the role of {job_title}.
+Job description: {job_description}
+
+Conversation so far:
+{history_text}
+
+Based on the candidate's previous answer, ask a relevant follow-up or a new interview question that probes deeper into their skills or experience. Ask only the question, nothing else."""
+
+    response = co.chat(
+        message=prompt,
+        model="command-a-03-2025",
+        temperature=0.6,
+    )
+    return response.text.strip()

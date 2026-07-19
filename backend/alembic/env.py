@@ -13,6 +13,8 @@ from app.db.database import Base
 from app.models.user import User
 from app.models.resume import Resume
 from app.models.job_posting import JobPosting
+from app.models.interview_session import InterviewSession
+from app.models.interview_turn import InterviewTurn
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
