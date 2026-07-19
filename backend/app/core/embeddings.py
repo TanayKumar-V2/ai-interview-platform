@@ -1,5 +1,6 @@
 import os
 import cohere
+import json
 
 co = cohere.Client(os.getenv("COHERE_API_KEY"))
 
@@ -57,3 +58,37 @@ Based on the candidate's previous answer, ask a relevant follow-up or a new inte
         temperature=0.6,
     )
     return response.text.strip()
+
+
+
+
+def generate_interview_feedback(job_title: str, transcript: list[dict]) -> dict:
+    transcript_text = ""
+    for turn in transcript:
+        transcript_text += f"Q{turn['turn_number']}: {turn['question']}\nA{turn['turn_number']}: {turn['answer']}\n\n"
+
+    prompt = f"""You are an expert interview coach. Review this mock interview transcript for a {job_title} role.
+
+TRANSCRIPT:
+{transcript_text}
+
+Evaluate the candidate on three dimensions, each scored 1-10:
+- communication_score: clarity, confidence, and structure of spoken responses
+- technical_score: depth and accuracy of technical/domain knowledge shown
+- structure_score: how well-organized and complete each answer was (e.g. STAR method, clear reasoning)
+
+Also provide:
+- summary: 2-3 sentences on overall performance
+- suggestions: 2-3 specific, actionable improvements
+
+Respond ONLY with valid JSON in this exact format, nothing else:
+{{"communication_score": <int>, "technical_score": <int>, "structure_score": <int>, "summary": "<text>", "suggestions": "<text>"}}"""
+
+    response = co.chat(
+        message=prompt,
+        model="command-a-03-2025",
+        temperature=0.3,
+    )
+
+    cleaned = response.text.strip().strip("```json").strip("```").strip()
+    return json.loads(cleaned)
