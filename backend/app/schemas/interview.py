@@ -24,3 +24,20 @@ class InterviewSessionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        
+class TurnDetail(BaseModel):
+    turn_number: int
+    question: str
+    answer: str | None
+
+    class Config:
+        from_attributes = True
+
+
+class InterviewDetailResponse(BaseModel):
+    id: int
+    status: str
+    started_at: datetime
+    ended_at: datetime | None
+    turns: list[TurnDetail]
+    feedback: dict | None

@@ -7,6 +7,7 @@ from app.models.resume import Resume
 from app.schemas.resume import ResumeResponse
 from app.core.security import get_current_user
 from app.core.resume_parser import extract_text_from_file
+from app.schemas.resume import ResumeResponse
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -34,3 +35,16 @@ async def upload_resume(
     db.refresh(new_resume)
 
     return new_resume
+
+@router.get("/", response_model=list[ResumeResponse])
+def list_resumes(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    resumes = (
+        db.query(Resume)
+        .filter(Resume.user_id == current_user.id)
+        .order_by(Resume.uploaded_at.desc())
+        .all()
+    )
+    return resumes

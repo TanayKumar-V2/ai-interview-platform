@@ -11,3 +11,13 @@ class JobMatchResult(BaseModel):
 
     class Config:
         from_attributes = True
+        
+class JobPostingResponse(BaseModel):
+    id: int
+    title: str
+    company: str
+    description: str
+    location: str | None
+
+    class Config:
+        from_attributes = True

@@ -9,6 +9,9 @@ from app.models.interview_turn import InterviewTurn
 from app.schemas.interview import StartInterviewRequest, AnswerRequest, InterviewTurnResponse
 from app.core.security import get_current_user
 from app.agents.interview_agent import interview_graph
+from app.schemas.interview import InterviewSessionResponse
+from app.models.feedback_report import FeedbackReport
+from app.schemas.interview import InterviewDetailResponse
 
 router = APIRouter(prefix="/interviews", tags=["interviews"])
 
@@ -150,4 +153,58 @@ def submit_answer(
         "turn_number": next_turn_number,
         "question": final_state["next_question"],
         "status": "in_progress",
+    }
+    
+@router.get("/", response_model=list[InterviewSessionResponse])
+def list_interviews(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    sessions = (
+        db.query(InterviewSession)
+        .filter(InterviewSession.user_id == current_user.id)
+        .order_by(InterviewSession.started_at.desc())
+        .all()
+    )
+    return sessions
+
+@router.get("/{session_id}", response_model=InterviewDetailResponse)
+def get_interview_detail(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = db.query(InterviewSession).filter(
+        InterviewSession.id == session_id, InterviewSession.user_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Interview session not found")
+
+    turns = (
+        db.query(InterviewTurn)
+        .filter(InterviewTurn.session_id == session_id)
+        .order_by(InterviewTurn.turn_number)
+        .all()
+    )
+
+    feedback_report = db.query(FeedbackReport).filter(FeedbackReport.session_id == session_id).first()
+
+    feedback_dict = None
+    if feedback_report:
+        feedback_dict = {
+            "communication_score": feedback_report.communication_score,
+            "technical_score": feedback_report.technical_score,
+            "structure_score": feedback_report.structure_score,
+            "summary": feedback_report.summary,
+            "suggestions": feedback_report.suggestions,
+        }
+
+    return {
+        "id": session.id,
+        "status": session.status,
+        "started_at": session.started_at,
+        "ended_at": session.ended_at,
+        "turns": turns,
+        "feedback": feedback_dict,
     }
