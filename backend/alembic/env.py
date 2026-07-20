@@ -16,6 +16,7 @@ from app.models.job_posting import JobPosting
 from app.models.interview_session import InterviewSession
 from app.models.interview_turn import InterviewTurn
 from app.models.feedback_report import FeedbackReport
+from app.models.proctoring_flag import ProctoringFlag
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

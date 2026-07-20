@@ -12,6 +12,8 @@ from app.agents.interview_agent import interview_graph
 from app.schemas.interview import InterviewSessionResponse
 from app.models.feedback_report import FeedbackReport
 from app.schemas.interview import InterviewDetailResponse
+from app.models.proctoring_flag import ProctoringFlag
+from app.schemas.interview import FlagRequest
 
 router = APIRouter(prefix="/interviews", tags=["interviews"])
 
@@ -208,3 +210,27 @@ def get_interview_detail(
         "turns": turns,
         "feedback": feedback_dict,
     }
+
+@router.post("/{session_id}/flag")
+def create_flag(
+    session_id: int,
+    request: FlagRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = db.query(InterviewSession).filter(
+        InterviewSession.id == session_id, InterviewSession.user_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Interview session not found")
+
+    flag = ProctoringFlag(
+        session_id=session_id,
+        flag_type=request.flag_type,
+        message=request.message,
+    )
+    db.add(flag)
+    db.commit()
+
+    return {"status": "logged"}

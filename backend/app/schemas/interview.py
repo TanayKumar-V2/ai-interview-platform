@@ -41,3 +41,8 @@ class InterviewDetailResponse(BaseModel):
     ended_at: datetime | None
     turns: list[TurnDetail]
     feedback: dict | None
+    
+    
+class FlagRequest(BaseModel):
+    flag_type: str
+    message: str
